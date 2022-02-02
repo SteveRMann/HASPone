@@ -26,6 +26,19 @@
 // OUT OF OR IN CONNECTION WITH THE PRODUCT OR THE USE OR OTHER DEALINGS IN THE PRODUCT.
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+/* #######################################################
+ MY CHANGES
+ Hard coded my local IP credentials
+ Update statusUpdateInterval = 30000 (30 seconds)
+ Added ssid to mqttSensorPayload
+ Added wifiPass to mqttSensorPayload
+
+
+//####################################################### */
+
+
 #include <FS.h>
 #include <EEPROM.h>
 #include <EspSaveCrash.h>
@@ -46,14 +59,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // These defaults may be overwritten with values saved by the web interface
-char wifiSSID[32] = "";
-char wifiPass[64] = "";
-char mqttServer[128] = "";
+char wifiSSID[32] = "Serenity";       //Case sensitive
+char wifiPass[64] = "firefly1";
+char mqttServer[128] = "192.168.1.124";
 char mqttPort[6] = "1883";
 char mqttUser[128] = "";
 char mqttPassword[128] = "";
 char mqttFingerprint[60] = "";
-char haspNode[16] = "plate01";
+char haspNode[16] = "platep";
 char groupName[16] = "plates";
 char hassDiscovery[128] = "homeassistant";
 char configUser[32] = "admin";
@@ -873,6 +886,8 @@ void mqttStatusUpdate()
   }
   mqttSensorPayload += String(F("\"espUptime\":")) + String(long(millis() / 1000)) + String(F(","));
   mqttSensorPayload += String(F("\"signalStrength\":")) + String(WiFi.RSSI()) + String(F(","));
+  mqttSensorPayload += String(F("\"ssid\":\"")) + String(WiFi.SSID()) + String(F("\","));
+  mqttSensorPayload += String(F("\"wifiPass\":\"")) + String(wifiPass) + String(F("\","));
   mqttSensorPayload += String(F("\"haspName\":\"")) + String(haspNode) + String(F("\","));
   mqttSensorPayload += String(F("\"haspIP\":\"")) + WiFi.localIP().toString() + String(F("\","));
   mqttSensorPayload += String(F("\"haspClientID\":\"")) + mqttClientId + String(F("\","));
@@ -883,7 +898,7 @@ void mqttStatusUpdate()
   mqttSensorPayload += String(F("\"heapMaxFreeBlockSize\":")) + String(ESP.getMaxFreeBlockSize()) + String(F(","));
   mqttSensorPayload += String(F("\"espCore\":\"")) + String(ESP.getCoreVersion()) + String(F("\""));
   mqttSensorPayload += "}";
-
+  
   // Publish sensor JSON
   mqttClient.publish(mqttSensorTopic, mqttSensorPayload, true, 1);
   debugPrintln(String(F("MQTT OUT: '")) + mqttSensorTopic + String(F("' : '")) + mqttSensorPayload + String(F("'")));
