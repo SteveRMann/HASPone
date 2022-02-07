@@ -61,13 +61,13 @@
 // These defaults may be overwritten with values saved by the web interface
 char wifiSSID[32] = "Serenity";       //Case sensitive
 char wifiPass[64] = "firefly1";
+char haspNode[16] = "desktop";
+char groupName[16] = "plates";
 char mqttServer[128] = "192.168.1.124";
 char mqttPort[6] = "1883";
 char mqttUser[128] = "";
 char mqttPassword[128] = "";
 char mqttFingerprint[60] = "";
-char haspNode[16] = "platep";
-char groupName[16] = "plates";
 char hassDiscovery[128] = "homeassistant";
 char configUser[32] = "admin";
 char configPassword[32] = "";
