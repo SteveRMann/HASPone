@@ -31,6 +31,7 @@
 /* #######################################################
  MY CHANGES
  Hard coded my local IP credentials
+ char haspNode[16] = "mbr";  <-- Change
  Update statusUpdateInterval = 30000 (30 seconds)
  Added ssid to mqttSensorPayload
  Added wifiPass to mqttSensorPayload
@@ -61,7 +62,7 @@
 // These defaults may be overwritten with values saved by the web interface
 char wifiSSID[32] = "Serenity";       //Case sensitive
 char wifiPass[64] = "firefly1";
-char haspNode[16] = "desktop";
+char haspNode[16] = "mbr";
 char groupName[16] = "plates";
 char mqttServer[128] = "192.168.1.124";
 char mqttPort[6] = "1883";
