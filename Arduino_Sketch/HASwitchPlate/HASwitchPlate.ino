@@ -31,7 +31,7 @@
 /* #######################################################
  MY CHANGES
  Hard coded my local IP credentials
- char haspNode[16] = "mbr";  <-- Change
+ char haspNode[16] = "mbr";
  Update statusUpdateInterval = 30000 (30 seconds)
  Added ssid to mqttSensorPayload
  Added wifiPass to mqttSensorPayload
