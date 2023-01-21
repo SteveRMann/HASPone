@@ -59,9 +59,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // These defaults may be overwritten with values saved by the web interface
+char haspNode[16] = "familyroom";
 char wifiSSID[32] = "Kaywinnet";       //Case sensitive
 char wifiPass[64] = "806194edb8";
-char haspNode[16] = "familyrm";
 char groupName[16] = "plates";
 char mqttServer[128] = "192.168.1.124";
 char mqttPort[6] = "1883";
