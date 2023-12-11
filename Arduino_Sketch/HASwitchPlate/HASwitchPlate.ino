@@ -26,18 +26,13 @@
 // OUT OF OR IN CONNECTION WITH THE PRODUCT OR THE USE OR OTHER DEALINGS IN THE PRODUCT.
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
 /* #######################################################
- MY CHANGES
- Hard coded my local IP credentials
- Update statusUpdateInterval = 30000 (30 seconds)
- Added ssid to mqttSensorPayload
- Added wifiPass to mqttSensorPayload
-
-
-//####################################################### */
-
+  MY CHANGES
+  Hard coded my local IP credentials
+  Update statusUpdateInterval = 30000 (30 seconds)
+  Added ssid and wifiPass to mqttSensorPayload
+  In setup(), changed the first debugPrint to debugPrintln
+  //####################################################### */
 
 #include <FS.h>
 #include <EEPROM.h>
@@ -59,15 +54,15 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // These defaults may be overwritten with values saved by the web interface
-char haspNode[16] = "familyroom";
-char wifiSSID[32] = "Kaywinnet";       //Case sensitive
+char haspNode[16] = "lab";
+char wifiSSID[32] = "Kaywinnet";
 char wifiPass[64] = "806194edb8";
-char groupName[16] = "plates";
 char mqttServer[128] = "192.168.1.124";
 char mqttPort[6] = "1883";
 char mqttUser[128] = "";
 char mqttPassword[128] = "";
 char mqttFingerprint[60] = "";
+char groupName[16] = "plates";
 char hassDiscovery[128] = "homeassistant";
 char configUser[32] = "admin";
 char configPassword[32] = "";
@@ -161,7 +156,8 @@ const unsigned long nextionSpeeds[] = {2400,
                                        250000,
                                        256000,
                                        512000,
-                                       921600};                                       // Valid serial speeds for Nextion communication
+                                       921600
+                                      };                                       // Valid serial speeds for Nextion communication
 const uint8_t nextionSpeedsLength = sizeof(nextionSpeeds) / sizeof(nextionSpeeds[0]); // Size of our list of speeds
 
 WiFiClientSecure mqttClientSecure;        // TLS-enabled WiFiClient for MQTT
@@ -186,7 +182,7 @@ String lcdFirmwareUrl = "https://raw.githubusercontent.com/HASwitchPlate/HASPone
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup()
 { // System setup
-  debugPrint(String(F("\n\n================================================================================\n")));
+  debugPrintln(String(F("\n\n================================================================================")));
   debugPrintln(String(F("SYSTEM: Starting HASPone v")) + String(haspVersion));
   debugPrintln(String(F("SYSTEM: heapFree: ")) + String(ESP.getFreeHeap()) + String(F(" heapMaxFreeBlockSize: ")) + String(ESP.getMaxFreeBlockSize()));
   debugPrintln(String(F("SYSTEM: Last reset reason: ")) + String(ESP.getResetInfo()));
@@ -234,9 +230,11 @@ void setup()
   webServer.on("/firmware", webHandleFirmware);
   webServer.on("/espfirmware", webHandleEspFirmware);
   webServer.on(
-      "/lcdupload", HTTP_POST, []()
-      { webServer.send(200); },
-      webHandleLcdUpload);
+    "/lcdupload", HTTP_POST, []()
+  {
+    webServer.send(200);
+  },
+  webHandleLcdUpload);
   webServer.on("/tftFileSize", webHandleTftFileSize);
   webServer.on("/lcddownload", webHandleLcdDownload);
   webServer.on("/lcdOtaSuccess", webHandleLcdUpdateSuccess);
@@ -334,8 +332,8 @@ void mqttConnect()
 { // MQTT connection and subscriptions
 
   static bool mqttFirstConnect = true; // For the first connection, we want to send an OFF/ON state to
-                                       // trigger any automations, but skip that if we reconnect while
-                                       // still running the sketch
+  // trigger any automations, but skip that if we reconnect while
+  // still running the sketch
   rebootOnp0b1 = true;
   static uint8_t mqttReconnectCount = 0;
   unsigned long mqttConnectTimer = 0;
@@ -590,7 +588,7 @@ void mqttProcessInput(String &strTopic, String &strPayload)
   debugPrintln(String(F("MQTT IN: '")) + strTopic + String(F("' : '")) + strPayload + String(F("'")));
 
   if (((strTopic == mqttCommandTopic) || (strTopic == mqttGroupCommandTopic)) && (strPayload == ""))
-  {                     // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
+  { // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
     mqttStatusUpdate(); // return status JSON via MQTT
   }
   else if (strTopic == mqttCommandTopic || strTopic == mqttGroupCommandTopic)
@@ -617,21 +615,21 @@ void mqttProcessInput(String &strTopic, String &strPayload)
     }
   }
   else if (strTopic == (mqttCommandTopic + "/statusupdate") || strTopic == (mqttGroupCommandTopic + "/statusupdate"))
-  {                     // '[...]/device/command/statusupdate' == mqttStatusUpdate()
+  { // '[...]/device/command/statusupdate' == mqttStatusUpdate()
     mqttStatusUpdate(); // return status JSON via MQTT
   }
   else if (strTopic == (mqttCommandTopic + "/discovery") || strTopic == (mqttGroupCommandTopic + "/discovery"))
-  {                  // '[...]/device/command/discovery' == mqttDiscovery()
+  { // '[...]/device/command/discovery' == mqttDiscovery()
     mqttDiscovery(); // send Home Assistant discovery message via MQTT
   }
   else if (strTopic == (mqttCommandTopic + "/hassdiscovery") || strTopic == (mqttGroupCommandTopic + "/hassdiscovery"))
-  {                                             // '[...]/device/command/hassdiscovery' -m 'homeassistant' == hassDiscovery = homeassistant
+  { // '[...]/device/command/hassdiscovery' -m 'homeassistant' == hassDiscovery = homeassistant
     strPayload.toCharArray(hassDiscovery, 128); // set hassDiscovery to value provided in payload
     configSave();
     mqttDiscovery(); // send Home Assistant discovery message on new discovery topic via MQTT
   }
   else if ((strTopic == (mqttCommandTopic + "/nextionmaxpages") || strTopic == (mqttGroupCommandTopic + "/nextionmaxpages")) && (strPayload.toInt() < 256) && (strPayload.toInt() > 0))
-  {                                       // '[...]/device/command/nextionmaxpages' -m '11' == nextionmaxpages = 11
+  { // '[...]/device/command/nextionmaxpages' -m '11' == nextionmaxpages = 11
     nextionMaxPages = strPayload.toInt(); // set nextionMaxPages to value provided in payload
     configSave();
     mqttDiscovery(); // send Home Assistant discovery message via MQTT
@@ -650,7 +648,7 @@ void mqttProcessInput(String &strTopic, String &strPayload)
             (strPayload.toInt() == 256000) ||
             (strPayload.toInt() == 512000) ||
             (strPayload.toInt() == 921600)))
-  {                                         // '[...]/device/command/nextionbaud' -m '921600' == nextionBaud = 921600
+  { // '[...]/device/command/nextionbaud' -m '921600' == nextionBaud = 921600
     strPayload.toCharArray(nextionBaud, 7); // set nextionBaud to value provided in payload
     nextionAckEnable = false;
     nextionSendCmd("bauds=" + strPayload); // send baud rate to nextion
@@ -665,69 +663,69 @@ void mqttProcessInput(String &strTopic, String &strPayload)
     configSave();
   }
   else if (strTopic == (mqttCommandTopic + "/debugserialenabled") || strTopic == (mqttGroupCommandTopic + "/debugserialenabled"))
-  {                                             // '[...]/device/command/debugserialenabled' -m 'true' == enable serial debug output
+  { // '[...]/device/command/debugserialenabled' -m 'true' == enable serial debug output
     if (strPayload.equalsIgnoreCase("true"))
     {
       debugSerialEnabled = true;
       configSave();
     }
-    else if(strPayload.equalsIgnoreCase("false"))
+    else if (strPayload.equalsIgnoreCase("false"))
     {
       debugSerialEnabled = false;
       configSave();
-    }    
+    }
   }
   else if (strTopic == (mqttCommandTopic + "/debugtelnetenabled") || strTopic == (mqttGroupCommandTopic + "/debugtelnetenabled"))
-  {                                             // '[...]/device/command/debugtelnetenabled' -m 'true' == enable telnet debug output
+  { // '[...]/device/command/debugtelnetenabled' -m 'true' == enable telnet debug output
     if (strPayload.equalsIgnoreCase("true"))
     {
       debugTelnetEnabled = true;
       configSave();
     }
-    else if(strPayload.equalsIgnoreCase("false"))
+    else if (strPayload.equalsIgnoreCase("false"))
     {
       debugTelnetEnabled = false;
       configSave();
-    }    
+    }
   }
   else if (strTopic == (mqttCommandTopic + "/mdnsenabled") || strTopic == (mqttGroupCommandTopic + "/mdnsenabled"))
-  {                                             // '[...]/device/command/mdnsenabled' -m 'true' == enable mDNS responder
+  { // '[...]/device/command/mdnsenabled' -m 'true' == enable mDNS responder
     if (strPayload.equalsIgnoreCase("true"))
     {
       mdnsEnabled = true;
       configSave();
     }
-    else if(strPayload.equalsIgnoreCase("false"))
+    else if (strPayload.equalsIgnoreCase("false"))
     {
       mdnsEnabled = false;
       configSave();
-    }    
+    }
   }
   else if (strTopic == (mqttCommandTopic + "/beepenabled") || strTopic == (mqttGroupCommandTopic + "/beepenabled"))
-  {                                             // '[...]/device/command/beepenabled' -m 'true' == enable beep output on keypress
+  { // '[...]/device/command/beepenabled' -m 'true' == enable beep output on keypress
     if (strPayload.equalsIgnoreCase("true"))
     {
       beepEnabled = true;
       configSave();
     }
-    else if(strPayload.equalsIgnoreCase("false"))
+    else if (strPayload.equalsIgnoreCase("false"))
     {
       beepEnabled = false;
       configSave();
-    }    
+    }
   }
   else if (strTopic == (mqttCommandTopic + "/ignoretouchwhenoff") || strTopic == (mqttGroupCommandTopic + "/ignoretouchwhenoff"))
-  {                                             // '[...]/device/command/ignoretouchwhenoff' -m 'true' == disable actions on keypress
+  { // '[...]/device/command/ignoretouchwhenoff' -m 'true' == disable actions on keypress
     if (strPayload.equalsIgnoreCase("true"))
     {
       ignoreTouchWhenOff = true;
       configSave();
     }
-    else if(strPayload.equalsIgnoreCase("false"))
+    else if (strPayload.equalsIgnoreCase("false"))
     {
       ignoreTouchWhenOff = false;
       configSave();
-    }    
+    }
   }
   else if (strTopic == (mqttCommandTopic + "/lcdupdate") || strTopic == (mqttGroupCommandTopic + "/lcdupdate"))
   { // '[...]/device/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' == nextionOtaStartDownload("http://192.168.0.10/local/HASwitchPlate.tft")
@@ -898,7 +896,7 @@ void mqttStatusUpdate()
   mqttSensorPayload += String(F("\"heapMaxFreeBlockSize\":")) + String(ESP.getMaxFreeBlockSize()) + String(F(","));
   mqttSensorPayload += String(F("\"espCore\":\"")) + String(ESP.getCoreVersion()) + String(F("\""));
   mqttSensorPayload += "}";
-  
+
   // Publish sensor JSON
   mqttClient.publish(mqttSensorTopic, mqttSensorPayload, true, 1);
   debugPrintln(String(F("MQTT OUT: '")) + mqttSensorTopic + String(F("' : '")) + mqttSensorPayload + String(F("'")));
@@ -1673,7 +1671,7 @@ void nextionOtaStartDownload(const String &lcdOtaUrl)
   { // HTTP header has been sent and Server response header has been handled
     debugPrintln(String(F("LCDOTA: HTTP GET return code:")) + String(lcdOtaHttpReturn));
     if (lcdOtaHttpReturn == HTTP_CODE_OK)
-    {                                                 // file found at server
+    { // file found at server
       int32_t lcdOtaRemaining = lcdOtaHttp.getSize(); // get length of document (is -1 when Server sends no Content-Length header)
       lcdOtaFileSize = lcdOtaRemaining;
       static uint16_t lcdOtaParts = (lcdOtaRemaining / 4096) + 1;
@@ -1713,7 +1711,7 @@ void nextionOtaStartDownload(const String &lcdOtaUrl)
       debugPrintln(F("LCDOTA: Starting update"));
       lcdOtaTimer = millis();
       while (lcdOtaHttp.connected() && (lcdOtaRemaining > 0 || lcdOtaRemaining == -1))
-      {                                                // Write incoming data to panel as it arrives
+      { // Write incoming data to panel as it arrives
         uint16_t lcdOtaHttpSize = stream->available(); // get available data size
 
         if (lcdOtaHttpSize)
@@ -1802,7 +1800,7 @@ void nextionOtaStartDownload(const String &lcdOtaUrl)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 bool nextionOtaResponse()
-{                                               // Monitor the serial port for a 0x05 response within our timeout
+{ // Monitor the serial port for a 0x05 response within our timeout
   unsigned long nextionCommandTimeout = 2000;   // timeout for receiving termination string in milliseconds
   unsigned long nextionCommandTimer = millis(); // record current time for our timeout
   bool otaSuccessVal = false;
@@ -2181,40 +2179,42 @@ void espSetupOta()
   ArduinoOTA.setRebootOnSuccess(false);
 
   ArduinoOTA.onStart([]()
-                     {
-                       debugPrintln(F("ESP OTA: update start"));
-                       nextionSetAttr("p[0].b[1].txt", "\"\\rHASPone update:\\r\\r\\r \"");
-                       nextionSendCmd("page 0");
-                       nextionSendCmd("vis 4,1");
-                     });
+  {
+    debugPrintln(F("ESP OTA: update start"));
+    nextionSetAttr("p[0].b[1].txt", "\"\\rHASPone update:\\r\\r\\r \"");
+    nextionSendCmd("page 0");
+    nextionSendCmd("vis 4,1");
+  });
   ArduinoOTA.onEnd([]()
-                   {
-                     debugPrintln(F("ESP OTA: update complete"));
-                     nextionSetAttr("p[0].b[1].txt", "\"\\rHASPone update:\\r\\r Complete!\\rRestarting.\"");
-                     nextionSendCmd("vis 4,1");
-                     delay(1000);
-                     espReset();
-                   });
+  {
+    debugPrintln(F("ESP OTA: update complete"));
+    nextionSetAttr("p[0].b[1].txt", "\"\\rHASPone update:\\r\\r Complete!\\rRestarting.\"");
+    nextionSendCmd("vis 4,1");
+    delay(1000);
+    espReset();
+  });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
-                        { nextionUpdateProgress(progress, total); });
+  {
+    nextionUpdateProgress(progress, total);
+  });
   ArduinoOTA.onError([](ota_error_t error)
-                     {
-                       debugPrintln(String(F("ESP OTA: ERROR code ")) + String(error));
-                       if (error == OTA_AUTH_ERROR)
-                         debugPrintln(F("ESP OTA: ERROR - Auth Failed"));
-                       else if (error == OTA_BEGIN_ERROR)
-                         debugPrintln(F("ESP OTA: ERROR - Begin Failed"));
-                       else if (error == OTA_CONNECT_ERROR)
-                         debugPrintln(F("ESP OTA: ERROR - Connect Failed"));
-                       else if (error == OTA_RECEIVE_ERROR)
-                         debugPrintln(F("ESP OTA: ERROR - Receive Failed"));
-                       else if (error == OTA_END_ERROR)
-                         debugPrintln(F("ESP OTA: ERROR - End Failed"));
-                       nextionSendCmd("vis 4,0");
-                       nextionSetAttr("p[0].b[1].txt", "\"HASPone update:\\r FAILED\\rerror: " + String(error) + "\"");
-                       delay(1000);
-                       nextionSendCmd("page " + String(nextionActivePage));
-                     });
+  {
+    debugPrintln(String(F("ESP OTA: ERROR code ")) + String(error));
+    if (error == OTA_AUTH_ERROR)
+      debugPrintln(F("ESP OTA: ERROR - Auth Failed"));
+    else if (error == OTA_BEGIN_ERROR)
+      debugPrintln(F("ESP OTA: ERROR - Begin Failed"));
+    else if (error == OTA_CONNECT_ERROR)
+      debugPrintln(F("ESP OTA: ERROR - Connect Failed"));
+    else if (error == OTA_RECEIVE_ERROR)
+      debugPrintln(F("ESP OTA: ERROR - Receive Failed"));
+    else if (error == OTA_END_ERROR)
+      debugPrintln(F("ESP OTA: ERROR - End Failed"));
+    nextionSendCmd("vis 4,0");
+    nextionSetAttr("p[0].b[1].txt", "\"HASPone update:\\r FAILED\\rerror: " + String(error) + "\"");
+    delay(1000);
+    nextionSendCmd("page " + String(nextionActivePage));
+  });
   ArduinoOTA.begin();
   debugPrintln(F("ESP OTA: Over the Air firmware update ready"));
 }
@@ -2248,24 +2248,24 @@ void espStartOta(const String &espOtaUrl)
 
   switch (espOtaUrlReturnCode)
   {
-  case HTTP_UPDATE_FAILED:
-    debugPrintln(String(F("ESPFW: HTTP_UPDATE_FAILED error ")) + String(ESPhttpUpdate.getLastError()) + " " + ESPhttpUpdate.getLastErrorString());
-    nextionSendCmd("vis 4,0");
-    nextionSetAttr("p[0].b[1].txt", "\"HASPone update:\\r FAILED\\rerror: " + ESPhttpUpdate.getLastErrorString() + "\"");
-    break;
+    case HTTP_UPDATE_FAILED:
+      debugPrintln(String(F("ESPFW: HTTP_UPDATE_FAILED error ")) + String(ESPhttpUpdate.getLastError()) + " " + ESPhttpUpdate.getLastErrorString());
+      nextionSendCmd("vis 4,0");
+      nextionSetAttr("p[0].b[1].txt", "\"HASPone update:\\r FAILED\\rerror: " + ESPhttpUpdate.getLastErrorString() + "\"");
+      break;
 
-  case HTTP_UPDATE_NO_UPDATES:
-    debugPrintln(F("ESPFW: HTTP_UPDATE_NO_UPDATES"));
-    nextionSendCmd("vis 4,0");
-    nextionSetAttr("p[0].b[1].txt", "\"HASPone update:\\rNo update\"");
-    break;
+    case HTTP_UPDATE_NO_UPDATES:
+      debugPrintln(F("ESPFW: HTTP_UPDATE_NO_UPDATES"));
+      nextionSendCmd("vis 4,0");
+      nextionSetAttr("p[0].b[1].txt", "\"HASPone update:\\rNo update\"");
+      break;
 
-  case HTTP_UPDATE_OK:
-    debugPrintln(F("ESPFW: HTTP_UPDATE_OK"));
-    nextionSetAttr("p[0].b[1].txt", "\"\\rHASPone update:\\r\\r Complete!\\rRestarting.\"");
-    nextionSendCmd("vis 4,1");
-    delay(1000);
-    espReset();
+    case HTTP_UPDATE_OK:
+      debugPrintln(F("ESPFW: HTTP_UPDATE_OK"));
+      nextionSetAttr("p[0].b[1].txt", "\"\\rHASPone update:\\r\\r Complete!\\rRestarting.\"");
+      nextionSendCmd("vis 4,1");
+      delay(1000);
+      espReset();
   }
   delay(1000);
   nextionSendCmd("page " + String(nextionActivePage));
@@ -3668,7 +3668,7 @@ void motionSetup()
 void motionHandle()
 { // Monitor motion sensor
   if (motionEnabled)
-  {                                                    // Check on our motion sensor
+  { // Check on our motion sensor
     static unsigned long motionLatchTimer = 0;         // Timer for motion sensor latch
     static unsigned long motionBufferTimer = millis(); // Timer for motion sensor buffer
     static bool motionActiveBuffer = motionActive;
@@ -3766,7 +3766,7 @@ void telnetHandleClient()
           // If we get a CR just ignore it
         }
         else if (telnetInputByte == 10)
-        {                                          // We've caught a LF (DEC 10), send buffer contents to the Nextion
+        { // We've caught a LF (DEC 10), send buffer contents to the Nextion
           telnetInputBuffer[telnetInputIndex] = 0; // null terminate our char array
           nextionSendCmd(String(telnetInputBuffer));
           telnetInputIndex = 0;
@@ -3831,7 +3831,7 @@ void debugPrint(const String &debugText)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void debugPrintCrash()
-{                                    // Debug output line of text to our debug targets
+{ // Debug output line of text to our debug targets
   SoftwareSerial debugSerial(-1, 1); // -1==nc for RX, 1==TX pin
   debugSerial.begin(debugSerialBaud);
   SaveCrash.print(debugSerial);
